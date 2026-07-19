@@ -6,7 +6,7 @@
 #include "duilib/Utils/FilePath.h"
 #include "duilib/Core/EventArgs.h"
 
-#if defined (DUILIB_BUILD_FOR_SDL)
+#if defined (DUILIB_BUILD_FOR_SDL) || defined (DUILIB_BUILD_FOR_WAYLAND)
     #include "duilib/Core/NativeWindow_SDL.h"
 #elif defined (DUILIB_BUILD_FOR_WIN)
     #include "duilib/Core/NativeWindow_Windows.h"
@@ -1453,3 +1453,4 @@ private:
 } // namespace ui
 
 #endif // UI_CORE_WINDOW_BASE_H_
+

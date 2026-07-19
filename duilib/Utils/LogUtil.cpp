@@ -38,6 +38,8 @@ void LogUtil::Output(const DString& log, bool bPrintTime)
     ::OutputDebugString(logMsg.c_str());
 #elif defined (DUILIB_BUILD_FOR_SDL)
     SDL_Log("%s", logMsg.c_str());
+#elif defined (DUILIB_BUILD_FOR_WAYLAND)
+    fprintf(stderr, "%s\n", logMsg.c_str());
 #endif
 }
 

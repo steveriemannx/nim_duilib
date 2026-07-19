@@ -5,7 +5,7 @@
 #include "duilib/Image/Image.h"
 #include "duilib/Control/RichEditData.h"
 
-#ifdef DUILIB_BUILD_FOR_SDL
+#if defined(DUILIB_BUILD_FOR_SDL) || defined(DUILIB_BUILD_FOR_WAYLAND)
 
 namespace ui 
 {

@@ -1,7 +1,7 @@
 #include "ClickThrough.h"
 #include "duilib/Core/Window.h"
 
-#if defined (DUILIB_BUILD_FOR_LINUX) || defined (DUILIB_BUILD_FOR_FREEBSD)
+#if (defined (DUILIB_BUILD_FOR_LINUX) || defined (DUILIB_BUILD_FOR_FREEBSD)) && !defined(DUILIB_BUILD_FOR_WAYLAND)
 
 #include <X11/Xlib.h>
 #include <X11/Xutil.h>
@@ -441,4 +441,18 @@ bool ClickThrough::ClickThroughWindow(Window* pWindow, const UiPoint& ptMouse)
 
 }//namespace ui
 
-#endif //DUILIB_BUILD_FOR_LINUX
+#endif //(DUILIB_BUILD_FOR_LINUX || DUILIB_BUILD_FOR_FREEBSD) && !DUILIB_BUILD_FOR_WAYLAND
+
+// Wayland stubs (no X11 available)
+#if defined(DUILIB_BUILD_FOR_WAYLAND)
+namespace ui {
+
+ClickThrough::ClickThrough() {}
+ClickThrough::~ClickThrough() {}
+bool ClickThrough::ClickThroughWindow(Window* pWindow, const UiPoint& ptMouse) {
+    (void)pWindow; (void)ptMouse;
+    return false;
+}
+
+} // namespace ui
+#endif

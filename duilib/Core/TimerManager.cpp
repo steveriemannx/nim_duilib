@@ -6,12 +6,16 @@
 
 #if defined (DUILIB_BUILD_FOR_SDL)
     #include <SDL3/SDL.h>
+#elif defined (DUILIB_BUILD_FOR_WAYLAND)
+    #include "duilib/Core/WindowMessage.h"
 #endif
 
 /** 自定义消息
 */
 #if defined (DUILIB_BUILD_FOR_SDL)
     #define WM_USER_DEFINED_TIMER   (SDL_EVENT_USER + 2)
+#elif defined (DUILIB_BUILD_FOR_WAYLAND)
+    #define WM_USER_DEFINED_TIMER   (kWM_USER + 2)
 #else
     #define WM_USER_DEFINED_TIMER   (kWM_USER + 567)
 #endif
@@ -288,3 +292,5 @@ void TimerManager::WorkerThreadProc()
 }
 
 }
+
+

@@ -5,7 +5,7 @@
 
 #if defined (DUILIB_BUILD_FOR_WIN) && !defined (DUILIB_BUILD_FOR_SDL)
     #include "DateTimeWnd_Windows.h"
-#elif defined (DUILIB_BUILD_FOR_SDL)
+#elif defined (DUILIB_BUILD_FOR_SDL) || defined (DUILIB_BUILD_FOR_WAYLAND)
     #include "DateTimeWnd_SDL.h"
 #endif
 

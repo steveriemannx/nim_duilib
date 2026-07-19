@@ -1,8 +1,10 @@
 #include "Clipboard.h"
 #include "duilib/Utils/StringConvert.h"
 
-#ifdef DUILIB_BUILD_FOR_SDL
+#if defined(DUILIB_BUILD_FOR_SDL) || defined(DUILIB_BUILD_FOR_WAYLAND)
+#if defined(DUILIB_BUILD_FOR_SDL)
 #include <SDL3/SDL.h>
+#endif
 
 namespace ui
 {
@@ -17,6 +19,7 @@ bool Clipboard::GetClipboardText(DStringW& text)
 bool Clipboard::GetClipboardText(DStringA& text)
 {
     text.clear();
+    #if defined(DUILIB_BUILD_FOR_SDL)
     if (SDL_HasClipboardText()) {
         char* szTemp = SDL_GetClipboardText();
         if (szTemp != nullptr) {
@@ -25,6 +28,7 @@ bool Clipboard::GetClipboardText(DStringA& text)
             szTemp = nullptr;
         }
     }
+#endif
     return true;
 }
 
@@ -35,7 +39,12 @@ bool Clipboard::SetClipboardText(const DStringW& text)
 
 bool Clipboard::SetClipboardText(const DStringA& text)
 {
+    #if defined(DUILIB_BUILD_FOR_SDL)
     return SDL_SetClipboardText(text.c_str());
+#else
+    (void)text;
+    return false;
+#endif
 }
 
 } //namespace ui

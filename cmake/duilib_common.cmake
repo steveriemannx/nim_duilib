@@ -28,11 +28,22 @@ option(DUILIB_LOG "Print duilib debug log" OFF)
 # Skia的lib子目录名开关（默认情况下，Windows按规则拼接路径；其他平台则可以固定目录，比如llvm编译）
 option(DUILIB_SKIA_LIB_SUBPATH "Skia lib sub path" OFF)
 
+# Wayland功能 (Linux平台可选，替代SDL)
+if(DUILIB_OS_LINUX)
+    option(DUILIB_ENABLE_WAYLAND "Enable Wayland (alternative to SDL)" OFF)
+endif()
+
 # SDL功能：Windows平台默认不开启，其他平台默认开启
+# 如果开启Wayland，则默认关闭SDL
 if(DUILIB_OS_WINDOWS)
     option(DUILIB_ENABLE_SDL "Enable SDL" OFF)
 else()
-    option(DUILIB_ENABLE_SDL "Enable SDL" ON)
+    if(DUILIB_ENABLE_WAYLAND)
+        set(DUILIB_ENABLE_SDL_DEFAULT OFF)
+    else()
+        set(DUILIB_ENABLE_SDL_DEFAULT ON)
+    endif()
+    option(DUILIB_ENABLE_SDL "Enable SDL" ${DUILIB_ENABLE_SDL_DEFAULT})
 endif()
 
 # CEF功能：默认不开启，只有特定的项目开启
@@ -165,6 +176,39 @@ if(DUILIB_ENABLE_SDL)
     endif()
 endif()
 
+#Wayland库 (Linux平台可选，替代SDL)
+if(DUILIB_ENABLE_WAYLAND)
+    find_package(PkgConfig REQUIRED)
+    pkg_check_modules(WAYLAND_CLIENT REQUIRED wayland-client)
+    pkg_check_modules(WAYLAND_EGL REQUIRED wayland-egl)
+    pkg_check_modules(WAYLAND_CURSOR REQUIRED wayland-cursor)
+    pkg_check_modules(WLROOTS REQUIRED wlroots-0.18)
+    pkg_check_modules(XKBCOMMON REQUIRED xkbcommon)
+    pkg_check_modules(EGL REQUIRED egl)
+    pkg_check_modules(GLESV2 REQUIRED glesv2)
+    pkg_check_modules(WAYLAND_PROTOCOLS REQUIRED wayland-protocols)
+    
+    set(DUILIB_WAYLAND_LIBS
+        ${WAYLAND_CLIENT_LIBRARIES}
+        ${WAYLAND_EGL_LIBRARIES}
+        ${WAYLAND_CURSOR_LIBRARIES}
+        ${WLROOTS_LIBRARIES}
+        ${XKBCOMMON_LIBRARIES}
+        ${EGL_LIBRARIES}
+        ${GLESV2_LIBRARIES}
+    )
+    set(DUILIB_WAYLAND_INCLUDE_DIRS
+        ${WAYLAND_CLIENT_INCLUDE_DIRS}
+        ${WAYLAND_EGL_INCLUDE_DIRS}
+        ${WAYLAND_CURSOR_INCLUDE_DIRS}
+        ${WLROOTS_INCLUDE_DIRS}
+        ${XKBCOMMON_INCLUDE_DIRS}
+        ${EGL_INCLUDE_DIRS}
+        ${GLESV2_INCLUDE_DIRS}
+        ${WAYLAND_PROTOCOLS_INCLUDE_DIRS}
+    )
+endif()
+
 #输出日志：打印变量数据
 if(DUILIB_LOG)
     message(STATUS "DUILIB_PROJECT_SRC_DIR: ${DUILIB_PROJECT_SRC_DIR}")
@@ -243,6 +287,11 @@ if(DUILIB_LOG)
         message(STATUS "DUILIB_SDL_SRC_ROOT_DIR: ${DUILIB_SDL_SRC_ROOT_DIR}")
         message(STATUS "DUILIB_SDL_LIB_PATH: ${DUILIB_SDL_LIB_PATH}")
         message(STATUS "DUILIB_SDL_LIBS: ${DUILIB_SDL_LIBS}")
+    endif()
+    message(STATUS "DUILIB_ENABLE_WAYLAND: ${DUILIB_ENABLE_WAYLAND}")
+    if(DUILIB_ENABLE_WAYLAND)
+        message(STATUS "DUILIB_WAYLAND_LIBS: ${DUILIB_WAYLAND_LIBS}")
+        message(STATUS "DUILIB_WAYLAND_INCLUDE_DIRS: ${DUILIB_WAYLAND_INCLUDE_DIRS}")
     endif()
     message(STATUS "") 
 endif()

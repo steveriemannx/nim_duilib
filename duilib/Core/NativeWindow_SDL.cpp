@@ -2250,7 +2250,7 @@ void NativeWindow_SDL::CheckSetWindowFocus()
     }
 #elif defined (DUILIB_BUILD_FOR_MACOS)
     SetFocus_MacOS(GetNSWindow());
-#elif defined (DUILIB_BUILD_FOR_LINUX) || defined (DUILIB_BUILD_FOR_FREEBSD)
+#elif (defined (DUILIB_BUILD_FOR_LINUX) || defined (DUILIB_BUILD_FOR_FREEBSD)) && !defined(DUILIB_BUILD_FOR_WAYLAND)
     SetFocus_Linux(GetX11WindowNumber());
 #endif
 }

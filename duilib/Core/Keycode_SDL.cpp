@@ -2,7 +2,9 @@
 
 #ifdef DUILIB_BUILD_FOR_SDL
 
+#if defined(DUILIB_BUILD_FOR_SDL)
 #include <SDL3/SDL.h>
+#endif
 
 namespace ui
 {

@@ -16,8 +16,10 @@
 #include "duilib/Control/Button.h"
 #include "duilib/Box/VBox.h"
 
-#ifdef DUILIB_BUILD_FOR_SDL
+#if defined(DUILIB_BUILD_FOR_SDL) || defined(DUILIB_BUILD_FOR_WAYLAND)
+#if defined(DUILIB_BUILD_FOR_SDL)
 #include <SDL3/SDL.h>
+#endif
 
 //缩放百分比的最大值
 #define MAX_ZOOM_PERCENT 800
@@ -4525,7 +4527,9 @@ void RichEdit::OnInputChar(const EventArgs& msg)
     DStringW text;
     if ((msg.vkCode == kVK_RETURN) || (msg.vkCode == kVK_TAB) || (msg.vkCode == kVK_DELETE) || (msg.vkCode == kVK_BACK)) {
         //回车键, TAB键, 删除键，退格键的处理逻辑，无输入文本
+        #if defined(DUILIB_BUILD_FOR_SDL)
         ASSERT(msg.eventData != SDL_EVENT_TEXT_INPUT);
+#endif
         if (msg.vkCode == kVK_RETURN) {
             //回车: 转换成换行："\r\n" 或者 "\n"
 #if defined (DUILIB_BUILD_FOR_WIN)
@@ -4540,9 +4544,15 @@ void RichEdit::OnInputChar(const EventArgs& msg)
         }
     }
     else {
+        #if defined(DUILIB_BUILD_FOR_SDL)
         ASSERT(msg.eventData == SDL_EVENT_TEXT_INPUT);
+#endif
         ASSERT(msg.vkCode == kVK_None);
+        #if defined(DUILIB_BUILD_FOR_SDL)
         if ((msg.eventData == SDL_EVENT_TEXT_INPUT) && (msg.wParam != 0) && (msg.lParam > 0)) {
+#else
+        if ((msg.wParam != 0) && (msg.lParam > 0)) {
+#endif
             //当前输入的字符或者字符串（比如中文输入时，候选词是一次输入，而不像Windows SDK那样按字符逐次输入）
             text = (DStringW::value_type*)msg.wParam;
         }

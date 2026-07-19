@@ -127,8 +127,8 @@ public:
 /** 窗口消息定义，只定义部分使用到的消息(和Windows系统定义一致，WinUser.h)
 */
 enum WindowMessage{
-#if defined(DUILIB_BUILD_FOR_SDL)
-    kWM_USER = 0x8000 + 32, //SDL_EVENT_USER
+#ifdef DUILIB_BUILD_FOR_SDL
+    kWM_USER = 0x8000 + 32, //SDL_EVENT_USER / Wayland user event
 #else
     kWM_USER = 0x0400, //WM_USER
 #endif
@@ -138,4 +138,5 @@ enum WindowMessage{
 } // namespace ui
 
 #endif // UI_CORE_WINDOW_MESSAGE_H_
+
 

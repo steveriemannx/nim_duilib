@@ -16,6 +16,7 @@ MainThread::~MainThread()
 
 void MainThread::OnInit()
 {
+    fprintf(stderr, "[basic] OnInit START\n");
     //初始化全局资源
     constexpr ui::ResourceType resType = ui::ResourceType::kLocalFiles;
     if (resType == ui::ResourceType::kLocalFiles) {
@@ -23,6 +24,7 @@ void MainThread::OnInit()
         ui::FilePath resourcePath = ui::FilePathUtil::GetCurrentModuleDirectory();
         resourcePath += _T("resources\\");
         ui::GlobalManager::Instance().Startup(ui::LocalFilesResParam(resourcePath));
+        fprintf(stderr, "[basic] GlobalManager::Startup done\n");
     }
     else if (resType == ui::ResourceType::kZipFile) {
         //使用本地zip压缩包作为资源（压缩包位于exe相同目录）    
@@ -46,14 +48,19 @@ void MainThread::OnInit()
     }
 #endif
     else {
+        fprintf(stderr, "[basic] OnInit: invalid resType, returning\n");
         return;
     }
 
     // 创建一个默认带有阴影的居中窗口
+    fprintf(stderr, "[basic] Creating MainForm...\n");
     MainForm* window = new MainForm();
+    fprintf(stderr, "[basic] MainForm created, calling CreateWnd...\n");
     window->CreateWnd(nullptr, ui::WindowCreateParam(_T("basic"), true));
     window->PostQuitMsgWhenClosed(true);
+    fprintf(stderr, "[basic] CreateWnd returned, showing window...\n");
     window->ShowWindow(ui::kSW_SHOW_NORMAL);
+    fprintf(stderr, "[basic] ShowWindow done\n");
     // window->ShowWindow(ui::kSW_SHOW_MAXIMIZED);
 }
 

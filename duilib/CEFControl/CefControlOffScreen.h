@@ -123,7 +123,7 @@ private:
      */
     int32_t GetCefMouseModifiers(const EventArgs& msg) const;
 
-#if defined (DUILIB_BUILD_FOR_SDL)
+#if defined (DUILIB_BUILD_FOR_SDL) || defined (DUILIB_BUILD_FOR_WAYLAND)
     /** 转发键盘相关消息到 BrowserHost
     */
     void SendKeyEvent(const EventArgs& msg, cef_key_event_type_t type);

@@ -6,6 +6,8 @@
 #if defined (DUILIB_BUILD_FOR_SDL)
     #include "duilib/Core/MessageLoop_SDL.h"
     #include <SDL3/SDL.h>
+#elif defined (DUILIB_BUILD_FOR_WAYLAND)
+    #include "duilib/Core/MessageLoop_Wayland.h"
 #elif defined (DUILIB_BUILD_FOR_WIN)
     #include "duilib/Core/MessageLoop_Windows.h"
 #endif
@@ -16,6 +18,8 @@
 */
 #if defined (DUILIB_BUILD_FOR_SDL)
     #define WM_USER_DEFINED_MSG     (SDL_EVENT_USER + 1)
+#elif defined (DUILIB_BUILD_FOR_WAYLAND)
+    #define WM_USER_DEFINED_MSG     (kWM_USER + 1)
 #else
     #define WM_USER_DEFINED_MSG     (kWM_USER + 568)
 #endif
@@ -37,6 +41,8 @@ FrameworkThread::FrameworkThread(const DString& threadName, int32_t nThreadIdent
 
 #ifdef DUILIB_BUILD_FOR_SDL
         MessageLoop_SDL::CheckInitSDL();
+#elif defined(DUILIB_BUILD_FOR_WAYLAND)
+        MessageLoop_Wayland::CheckInitWayland();
 #endif
         //初始化与主线程通信的机制
         m_threadMsg.Initialize(GlobalManager::Instance().GetPlatformData());
@@ -437,6 +443,9 @@ void FrameworkThread::OnRunMessageLoop()
 #if defined (DUILIB_BUILD_FOR_SDL)
     MessageLoop_SDL msgLoop;
     MessageLoop_SDL::CheckInitSDL();
+#elif defined (DUILIB_BUILD_FOR_WAYLAND)
+    MessageLoop_Wayland msgLoop;
+    MessageLoop_Wayland::CheckInitWayland();
 #elif defined (DUILIB_BUILD_FOR_WIN)
     MessageLoop_Windows msgLoop;
 #else
@@ -452,8 +461,15 @@ void FrameworkThread::OnRunMessageLoop()
             });
     }
     else {
+#if defined (DUILIB_BUILD_FOR_WAYLAND)
+        // Wayland backend always needs idle for painting
+        msgLoop.Run([this]() {
+            return OnMessageLoopIdle();
+            });
+#else
         //不支持Idle函数
         msgLoop.Run(nullptr);
+#endif
     }
     OnMainThreadExit();
 }
@@ -467,3 +483,6 @@ void FrameworkThread::OnMessageLoopIdle()
 }
 
 }//namespace ui 
+
+
+

@@ -9,6 +9,13 @@
 
 #if defined (DUILIB_BUILD_FOR_SDL)
     #include "duilib/RenderSkia/Render_Skia_SDL.h"
+    #include <SDL3/SDL.h>
+
+#elif defined (DUILIB_BUILD_FOR_WAYLAND)
+    #include "duilib/RenderSkia/Render_Skia_Wayland.h"
+    #include "duilib/Core/MessageLoop_Wayland.h"
+    #include <wayland-client.h>
+
 #elif defined (DUILIB_BUILD_FOR_WIN)
     #include "duilib/RenderSkia/Render_Skia_Windows.h"
 #endif
@@ -75,6 +82,10 @@ IRender* RenderFactory_Skia::CreateRender(const IRenderDpiPtr& spRenderDpi, void
 #if defined (DUILIB_BUILD_FOR_SDL)
     SDL_Window* sdlWindow = (SDL_Window*)platformData;
     IRender* pRender = new Render_Skia_SDL(sdlWindow, backendType);
+#elif defined (DUILIB_BUILD_FOR_WAYLAND)
+    wl_surface* wlSurface = (wl_surface*)platformData;
+    wl_shm* shm = MessageLoop_Wayland::GetShm();
+    IRender* pRender = new Render_Skia_Wayland(wlSurface, shm, backendType);
 #elif defined(DUILIB_BUILD_FOR_WIN)
     HWND hWnd = (HWND)platformData;
     IRender* pRender = new Render_Skia_Windows(hWnd, backendType);
@@ -97,3 +108,5 @@ IFontMgr* RenderFactory_Skia::GetFontMgr() const
 }
 
 } // namespace ui
+
+

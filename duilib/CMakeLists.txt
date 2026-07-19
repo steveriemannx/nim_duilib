@@ -59,10 +59,78 @@ get_filename_component(DUILIB_SRC_ROOT_DIR "${CMAKE_CURRENT_LIST_DIR}/../" ABSOL
 get_filename_component(SKIA_SRC_ROOT_DIR "${CMAKE_CURRENT_LIST_DIR}/../../skia/" ABSOLUTE)
 get_filename_component(SDL_SRC_ROOT_DIR "${CMAKE_CURRENT_LIST_DIR}/../../SDL3/" ABSOLUTE)
 
+# Wayland option (Linux only, alternative to SDL)
+if(CMAKE_SYSTEM_NAME STREQUAL "Linux")
+    option(DUILIB_ENABLE_WAYLAND "Enable Wayland (alternative to SDL)" OFF)
+endif()
+
+# Wayland library detection
+if(DUILIB_ENABLE_WAYLAND)
+    find_package(PkgConfig REQUIRED)
+    pkg_check_modules(WAYLAND_CLIENT REQUIRED wayland-client)
+    pkg_check_modules(WAYLAND_EGL REQUIRED wayland-egl)
+    pkg_check_modules(WAYLAND_CURSOR REQUIRED wayland-cursor)
+    pkg_check_modules(XKBCOMMON REQUIRED xkbcommon)
+    pkg_check_modules(EGL REQUIRED egl)
+    pkg_check_modules(GLESV2 REQUIRED glesv2)
+    pkg_check_modules(WAYLAND_PROTOCOLS REQUIRED wayland-protocols)
+    set(DUILIB_WAYLAND_INCLUDE_DIRS
+        ${WAYLAND_CLIENT_INCLUDE_DIRS}
+        ${WAYLAND_EGL_INCLUDE_DIRS}
+        ${WAYLAND_CURSOR_INCLUDE_DIRS}
+        ${XKBCOMMON_INCLUDE_DIRS}
+        ${EGL_INCLUDE_DIRS}
+        ${GLESV2_INCLUDE_DIRS}
+        ${WAYLAND_PROTOCOLS_INCLUDE_DIRS}
+    )
+    set(DUILIB_WAYLAND_LIBS
+        ${WAYLAND_CLIENT_LIBRARIES}
+        ${WAYLAND_EGL_LIBRARIES}
+        ${WAYLAND_CURSOR_LIBRARIES}
+        ${XKBCOMMON_LIBRARIES}
+        ${EGL_LIBRARIES}
+        ${GLESV2_LIBRARIES}
+    )
+    
+    # Generate Wayland protocol headers
+    find_program(WAYLAND_SCANNER wayland-scanner REQUIRED)
+    pkg_get_variable(WAYLAND_PROTOCOLS_DIR wayland-protocols pkgdatadir)
+    
+    set(WAYLAND_GEN_DIR "${CMAKE_CURRENT_BINARY_DIR}/wayland-generated-protocols")
+    file(MAKE_DIRECTORY ${WAYLAND_GEN_DIR})
+    
+    # xdg-shell protocol
+    set(XDG_SHELL_XML "${WAYLAND_PROTOCOLS_DIR}/stable/xdg-shell/xdg-shell.xml")
+    add_custom_command(
+        OUTPUT "${WAYLAND_GEN_DIR}/xdg-shell-client-protocol.h"
+        COMMAND ${WAYLAND_SCANNER} client-header ${XDG_SHELL_XML} "${WAYLAND_GEN_DIR}/xdg-shell-client-protocol.h"
+        DEPENDS ${XDG_SHELL_XML}
+        COMMENT "Generating xdg-shell-client-protocol.h"
+    )
+    add_custom_command(
+        OUTPUT "${WAYLAND_GEN_DIR}/xdg-shell-client-protocol.c"
+        COMMAND ${WAYLAND_SCANNER} private-code ${XDG_SHELL_XML} "${WAYLAND_GEN_DIR}/xdg-shell-client-protocol.c"
+        DEPENDS ${XDG_SHELL_XML}
+        COMMENT "Generating xdg-shell-client-protocol.c"
+    )
+    add_custom_target(generate_wayland_protocols DEPENDS
+        "${WAYLAND_GEN_DIR}/xdg-shell-client-protocol.h"
+        "${WAYLAND_GEN_DIR}/xdg-shell-client-protocol.c"
+    )
+
+    
+    include_directories(${WAYLAND_GEN_DIR})
+    list(APPEND DUILIB_WAYLAND_INCLUDE_DIRS ${WAYLAND_GEN_DIR})
+endif()
+
 # Always include these directories
 include_directories(${DUILIB_SRC_ROOT_DIR})
 include_directories(${SKIA_SRC_ROOT_DIR})
-include_directories("${SDL_SRC_ROOT_DIR}/include")
+if(DUILIB_ENABLE_WAYLAND)
+    include_directories(${DUILIB_WAYLAND_INCLUDE_DIRS})
+else()
+    include_directories("${SDL_SRC_ROOT_DIR}/include")
+endif()
 
 # Conditionally include CEF directory
 if(CEF_LIB_DIR AND NOT CMAKE_SYSTEM_NAME STREQUAL "FreeBSD")
@@ -89,7 +157,10 @@ aux_source_directory(${CMAKE_CURRENT_LIST_DIR}/RenderSkia RENDER_SKIA_SRC)
 aux_source_directory(${CMAKE_CURRENT_LIST_DIR}/Utils UTILS_SRC)
 
 # Only include CEF sources on supported platforms (Windows, Linux, macOS)
-if(NOT CMAKE_SYSTEM_NAME STREQUAL "FreeBSD")
+# Wayland build excludes CEF
+if(DUILIB_ENABLE_WAYLAND)
+    message(STATUS "CEF support disabled (Wayland build)")
+elseif(NOT CMAKE_SYSTEM_NAME STREQUAL "FreeBSD")
     aux_source_directory(${CMAKE_CURRENT_LIST_DIR}/CEFControl CEF_CONTROL_SRC)
     aux_source_directory(${CMAKE_CURRENT_LIST_DIR}/CEFControl/internal CEF_CONTROL_INTERNAL_SRC)
     list(APPEND PROJECT_SOURCES ${CEF_CONTROL_SRC} ${CEF_CONTROL_INTERNAL_SRC})
@@ -221,7 +292,10 @@ if(CMAKE_SYSTEM_NAME STREQUAL "Windows")  # Windows, WebView2
 endif()
 
 # Only include CEF sources on supported platforms (Windows, Linux, macOS)
-if(NOT CMAKE_SYSTEM_NAME STREQUAL "FreeBSD")
+# Wayland build excludes CEF
+if(DUILIB_ENABLE_WAYLAND)
+    message(STATUS "CEF support disabled (Wayland build)")
+elseif(NOT CMAKE_SYSTEM_NAME STREQUAL "FreeBSD")
     list(APPEND LIBRARY_SOURCES
         ${CEF_CONTROL_SRC}
         ${CEF_CONTROL_INTERNAL_SRC}
@@ -235,11 +309,24 @@ endif()
 if(CMAKE_SYSTEM_NAME STREQUAL "FreeBSD")
     find_package(Freetype REQUIRED)
     find_package(Fontconfig REQUIRED)
+    # Add generated protocol source before creating library
     add_library(${PROJECT_NAME} ${LIBRARY_SOURCES})
     target_link_libraries(${PROJECT_NAME} Freetype::Freetype Fontconfig::Fontconfig)
+elseif(DUILIB_ENABLE_WAYLAND)
+    list(APPEND LIBRARY_SOURCES "${WAYLAND_GEN_DIR}/xdg-shell-client-protocol.c")
+    add_library(${PROJECT_NAME} ${LIBRARY_SOURCES})
+    add_dependencies(${PROJECT_NAME} generate_wayland_protocols)
+    target_link_libraries(${PROJECT_NAME} ${DUILIB_WAYLAND_LIBS})
 else()
     # Create the library with the filtered sources
     add_library(${PROJECT_NAME} ${LIBRARY_SOURCES})
+endif()
+
+if(CMAKE_SYSTEM_NAME STREQUAL "Linux")
+    if(DUILIB_ENABLE_WAYLAND)
+        # Enable Wayland support for Linux (alternative to SDL)
+        target_compile_definitions(${PROJECT_NAME} PRIVATE DUILIB_WAYLAND=1)
+    endif()
 endif()
 
 if(CMAKE_SYSTEM_NAME STREQUAL "Windows")
@@ -308,3 +395,4 @@ if(CMAKE_C_COMPILER_ID MATCHES "GNU|Clang")
     target_compile_options(${PROJECT_NAME} PRIVATE ${DUILIB_COMPILER_FLAGS})
     target_compile_options(${PROJECT_NAME} PRIVATE $<$<COMPILE_LANGUAGE:CXX>: ${DUILIB_CXX_COMPILER_FLAGS}>)
 endif()
+

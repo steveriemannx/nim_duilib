@@ -6,7 +6,7 @@
 #include "duilib/Core/WindowCreateAttributes.h"
 #include "duilib/Utils/FilePath.h"
 
-#ifdef DUILIB_BUILD_FOR_SDL
+#if defined(DUILIB_BUILD_FOR_SDL) || defined(DUILIB_BUILD_FOR_WAYLAND)
 
 #include <unordered_map>
 
@@ -14,6 +14,15 @@
 struct SDL_Window;
 struct SDL_Renderer;
 struct SDL_Point;
+
+//Wayland types, forward declarations
+#if defined(DUILIB_BUILD_FOR_WAYLAND)
+struct wl_surface;
+struct xdg_surface;
+struct xdg_toplevel;
+struct wl_egl_window;
+struct wl_callback;
+#endif
 typedef uint32_t SDL_WindowID;
 typedef uint64_t SDL_WindowFlags;
 typedef uint32_t SDL_Keycode;
@@ -91,6 +100,10 @@ public:
     */
     void* GetWindowHandle() const;
 
+    /** 获取关联的INativeWindow接口
+    */
+    INativeWindow* GetOwner() const { return m_pOwner; }
+
     /** 获取当前窗口实现的驱动名称
     */
     DString GetVideoDriverName() const;
@@ -149,6 +162,30 @@ public:
     /** 获取Wayland的窗口所在Display指针（对应于Wayland的wl_display*类型）
     */
     size_t GetWaylandDisplayPointer() const;
+
+#if defined(DUILIB_BUILD_FOR_WAYLAND)
+    /** Start an interactive move or resize based on mouse position
+    * @param pt Mouse position in client coordinates
+    * @param serial Button press serial from wl_pointer.button event
+    */
+    void ProcessWaylandMoveResize(const UiPoint& pt, uint32_t serial);
+#endif
+
+#if defined(DUILIB_BUILD_FOR_WAYLAND)
+public:
+    wl_surface* m_pWaylandSurface;
+    xdg_surface* m_pXdgSurface;
+    xdg_toplevel* m_pXdgToplevel;
+    wl_egl_window* m_pEglWindow;
+    bool m_bWaylandConfigured;
+    int32_t m_nWaylandPendingWidth;
+    int32_t m_nWaylandPendingHeight;
+    bool m_bWaylandVisible;
+    bool m_bWaylandBufferBusy;
+    bool m_bWaylandMaximized;
+    bool m_bWaylandFullscreen;
+private:
+#endif
 
 #endif
 

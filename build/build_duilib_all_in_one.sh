@@ -8,6 +8,12 @@ if [ "$1" == "-sdl" ]; then
     ENABLE_SDL=1
 fi
 
+# Force enable Wayland (Linux only)
+ENABLE_WAYLAND=0
+if [ "$1" == "-wayland" ]; then
+    ENABLE_WAYLAND=1
+fi
+
 CURRENT_DIR=$(pwd)
 SCRIPT_DIR=$(cd "$(dirname "${BASH_SOURCE[0]}")" &> /dev/null && pwd)
 
@@ -363,8 +369,8 @@ else
     has_linux=1
 fi
 
-if [ "$has_curl$has_wget" != "00" ] && [ "$has_linux$has_macos" != "00" ]; then
-    # download CEF on Linux and MacOS
+if [ "$has_curl$has_wget" != "00" ] && [ "$has_linux$has_macos" != "00" ] && [ "$ENABLE_WAYLAND" != "1" ]; then
+    # download CEF on Linux and MacOS (skipped for Wayland builds)
     libcef_linux_dest_dir=./nim_duilib/bin/libcef_linux
     libcef_cef_binary_dir=./cef_binary
     
@@ -493,8 +499,14 @@ elif is_windows; then
     ./nim_duilib/build/msys2_build.sh $1
 else
     echo "Linux"
-    chmod +x ./nim_duilib/build/linux_build.sh
-    ./nim_duilib/build/linux_build.sh
+    if [ "$ENABLE_WAYLAND" == "1" ]; then
+        echo "  using Wayland backend"
+        chmod +x ./nim_duilib/build/linux_build_wayland.sh
+        ./nim_duilib/build/linux_build_wayland.sh
+    else
+        chmod +x ./nim_duilib/build/linux_build.sh
+        ./nim_duilib/build/linux_build.sh
+    fi
 fi
 
 cd "$CURRENT_DIR"

@@ -68,8 +68,13 @@
     #endif
 #else
     //非Windows平台
-    //是否使用SDL的窗口和鼠标键盘事件（目前只支持SDL3）
-    #define DUILIB_BUILD_FOR_SDL    1
+    #if (DUILIB_WAYLAND)
+        //使用Wayland + wlroots的窗口和鼠标键盘事件（替代SDL）
+        #define DUILIB_BUILD_FOR_WAYLAND 1
+    #else
+        //是否使用SDL的窗口和鼠标键盘事件（目前只支持SDL3）
+        #define DUILIB_BUILD_FOR_SDL    1
+    #endif
     //定义是否支持CEF
     #define DUILIB_BUILD_FOR_CEF    1
 #endif
@@ -148,3 +153,4 @@
 #include "duilib_string.h"
 
 #endif //DUILIB_CONFIG_H_
+

@@ -3,7 +3,7 @@
 
 #if defined (DUILIB_BUILD_FOR_WIN) && !defined (DUILIB_BUILD_FOR_SDL)
     #include "duilib/Control/RichEdit_Windows.h"
-#elif defined (DUILIB_BUILD_FOR_SDL)
+#elif defined (DUILIB_BUILD_FOR_SDL) || defined (DUILIB_BUILD_FOR_WAYLAND)
     #include "duilib/Control/RichEdit_SDL.h"
 #endif
 

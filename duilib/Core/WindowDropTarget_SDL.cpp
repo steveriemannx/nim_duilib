@@ -1,7 +1,7 @@
 #include "WindowDropTarget_SDL.h"
 #include "duilib/Core/ControlDropTarget.h"
 
-#if defined (DUILIB_BUILD_FOR_SDL)
+#if defined (DUILIB_BUILD_FOR_SDL) || defined (DUILIB_BUILD_FOR_WAYLAND)
 
 #include "duilib/Core/NativeWindow_SDL.h"
 #include "duilib/Core/Control.h"

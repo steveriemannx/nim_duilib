@@ -2,7 +2,7 @@
 
 #if defined (DUILIB_BUILD_FOR_WIN)
     #include "duilib/Utils/BitmapHelper_Windows.h"
-#elif defined(DUILIB_BUILD_FOR_SDL)
+#elif defined(DUILIB_BUILD_FOR_SDL) || defined(DUILIB_BUILD_FOR_WAYLAND)
     #include "duilib/Utils/BitmapHelper_SDL.h"
 #endif
 

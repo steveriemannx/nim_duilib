@@ -1,6 +1,6 @@
 #include "SDL_Linux.h"
 
-#if defined (DUILIB_BUILD_FOR_LINUX) || defined (DUILIB_BUILD_FOR_FREEBSD)
+#if (defined (DUILIB_BUILD_FOR_LINUX) || defined (DUILIB_BUILD_FOR_FREEBSD)) && !defined(DUILIB_BUILD_FOR_WAYLAND)
 
 #include <X11/Xlib.h>
 #include <X11/Xutil.h>
